@@ -47,7 +47,8 @@ Benvinguts a **Programació en Català**, una plataforma web interactiva d'apren
 ## 💻 Com Executar el Projecte
 
 Aquest projecte està dissenyat com una **aplicació d'un sol fitxer** (`Single-File Web Application`). No requereix instal·lar cap servidor ni dependències de Node.js.
-
+(https://bmarquil.github.io/ProgramaCAT/)
+o bé juga en local:
 1. Descarrega o clona aquest repositori:
    ```bash
    git clone https://github.com/bmarquil/programacio-en-catala.git
