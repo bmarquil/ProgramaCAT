@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programació en Català - Bernat Marquilles</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            user-select: none;
+            background-color: #090d16;
+            color: #f3f4f6;
+        }
+        .font-orbitron { font-family: 'Orbitron', monospace; }
+        .font-fredoka { font-family: 'Fredoka', sans-serif; }
+
+        /* Canvas rendering */
+        canvas {
+            image-rendering: pixelated;
+        }
+
+        /* Styles per a Blocs de Programació */
+        .code-block {
+            cursor: grab;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            transition: all 0.15s ease;
+        }
+        .code-block:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+        }
+
+        /* Temes dinàmics per als blocs */
+        .theme-cafa .block-action { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-left: 6px solid #60a5fa; color: white; }
+        .theme-cafa .block-turn { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border-left: 6px solid #a78bfa; color: white; }
+        .theme-cafa .block-loop { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); border-left: 6px solid #fbbf24; color: #090d16; }
+        .theme-cafa .block-if { background: linear-gradient(135deg, #059669 0%, #047857 100%); border-left: 6px solid #34d399; color: white; }
+
+        .theme-astro .block-action { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-left: 6px solid #c084fc; color: white; }
+        .theme-astro .block-turn { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); border-left: 6px solid #f472b6; color: white; }
+        .theme-astro .block-loop { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-left: 6px solid #fcd34d; color: #090d16; }
+        .theme-astro .block-if { background: linear-gradient(135deg, #10b981 0%, #047857 100%); border-left: 6px solid #6ee7b7; color: white; }
+
+        .theme-tractor .block-action { background: linear-gradient(135deg, #15803d 0%, #166534 100%); border-left: 6px solid #4ade80; color: white; }
+        .theme-tractor .block-turn { background: linear-gradient(135deg, #b45309 0%, #78350f 100%); border-left: 6px solid #fbbf24; color: white; }
+        .theme-tractor .block-loop { background: linear-gradient(135deg, #ca8a04 0%, #854d0e 100%); border-left: 6px solid #fde047; color: #090d16; }
+        .theme-tractor .block-if { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-left: 6px solid #38bdf8; color: white; }
+
+        .theme-submari .block-action { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-left: 6px solid #38bdf8; color: white; }
+        .theme-submari .block-turn { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); border-left: 6px solid #818cf8; color: white; }
+        .theme-submari .block-loop { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); border-left: 6px solid #fbbf24; color: #090d16; }
+        .theme-submari .block-if { background: linear-gradient(135deg, #059669 0%, #047857 100%); border-left: 6px solid #34d399; color: white; }
+
+        .executing-block {
+            outline: 4px solid #f59e0b !important;
+            box-shadow: 0 0 20px #f59e0b !important;
+            animation: pulse-exec 0.5s infinite alternate;
+        }
+        @keyframes pulse-exec {
+            from { outline-color: #f59e0b; }
+            to { outline-color: #38bdf8; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-slate-950">
+
+    <!-- HEADER PRINCIPAL DE LA PLATAFORMA -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between shrink-0 shadow-lg">
+        <div class="flex items-center space-x-4">
+            <button onclick="showGameMenu()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold font-orbitron flex items-center space-x-2 shadow-md transition transform active:scale-95">
+                <i class="fa-solid fa-gamepad text-sm"></i>
+                <span>Menú de Jocs</span>
+            </button>
+
+            <div class="flex items-center space-x-2 border-l border-slate-700 pl-4">
+                <i id="currentGameIcon" class="fa-solid fa-robot text-xl text-amber-400"></i>
+                <span id="portalTitle" class="font-orbitron font-bold text-lg tracking-wide text-white">Programació en Català</span>
+            </div>
+        </div>
+
+        <!-- Navegació de Nivells del joc actiu -->
+        <div class="flex items-center space-x-1 overflow-x-auto py-1 max-w-xl">
+            <div id="levelButtons" class="flex space-x-1"></div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <a href="https://github.com/bmarquil" target="_blank" rel="noopener noreferrer" class="hidden md:flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 transition">
+                <i class="fa-brands fa-github text-sm text-cyan-400"></i>
+                <span>Bernat Marquilles</span>
+            </a>
+            <button id="btnSound" onclick="toggleSound()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-cyan-400 border border-slate-700 transition" title="So">
+                <i class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- PANTALLA PRINCIPAL: MENU O JOC ACTIU -->
+    <div id="appContainer" class="flex-1 flex flex-col overflow-hidden relative">
+
+        <!-- OVERLAY DE MENÚ DE SELECCIÓ DE JOCS -->
+        <div id="gameMenuModal" class="absolute inset-0 bg-slate-950/95 backdrop-blur-md z-40 flex flex-col items-center justify-center p-6 overflow-y-auto">
+            <div class="text-center max-w-3xl mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white text-3xl mb-4 shadow-xl shadow-cyan-500/20">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-bold font-orbitron text-white tracking-wider mb-2">
+                    Programació en Català
+                </h1>
+                <p class="text-slate-400 text-sm max-w-lg mx-auto">
+                    Plataforma d'aprenentatge algorítmic per a infants creada per <span class="text-cyan-400 font-bold">Bernat Marquilles</span>. Tria una aventura i aprèn a programar amb blocs des de 0!
+                </p>
+            </div>
+
+            <!-- 4 TARGETES DE JOCS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-6xl px-4">
+                
+                <!-- 1. CAFArobot -->
+                <div onclick="selectGame('cafa')" class="bg-slate-900 border-2 border-slate-800 hover:border-blue-500 rounded-2xl p-5 cursor-pointer transition transform hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-blue-500/20 group flex flex-col">
+                    <div class="w-12 h-12 rounded-xl bg-blue-900/60 border border-blue-500 text-blue-400 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-lg text-white mb-1">CAFArobot</h3>
+                    <p class="text-slate-400 text-xs flex-1 mb-3 leading-relaxed">Navega el robot de circuit a través de laberints de proves i obstacles urbanes.</p>
+                    
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs font-bold text-blue-400 font-orbitron">
+                            <span>20 Nivells</span>
+                            <span id="progress-cafa-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+                            <div id="progress-cafa-bar" class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. ASTRO-bot -->
+                <div onclick="selectGame('astro')" class="bg-slate-900 border-2 border-slate-800 hover:border-purple-500 rounded-2xl p-5 cursor-pointer transition transform hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-purple-500/20 group flex flex-col">
+                    <div class="w-12 h-12 rounded-xl bg-purple-900/60 border border-purple-500 text-purple-400 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-lg text-white mb-1">ASTRO-bot</h3>
+                    <p class="text-slate-400 text-xs flex-1 mb-3 leading-relaxed">Explora planetes alienígenes amb el Rover Espacial i recull cristalls de galàxia.</p>
+                    
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs font-bold text-purple-400 font-orbitron">
+                            <span>20 Nivells Galàctics</span>
+                            <span id="progress-astro-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+                            <div id="progress-astro-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. TRACTORcode -->
+                <div onclick="selectGame('tractor')" class="bg-slate-900 border-2 border-slate-800 hover:border-emerald-500 rounded-2xl p-5 cursor-pointer transition transform hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-emerald-500/20 group flex flex-col">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-900/60 border border-emerald-500 text-emerald-400 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-tractor"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-lg text-white mb-1">TRACTORcode</h3>
+                    <p class="text-slate-400 text-xs flex-1 mb-3 leading-relaxed">Mena el tractor pels camps de conreu, esquiva la palla i recull la collita de blat.</p>
+                    
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs font-bold text-emerald-400 font-orbitron">
+                            <span>10 Nivells Rurals</span>
+                            <span id="progress-tractor-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+                            <div id="progress-tractor-bar" class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. SUBmaríCODE -->
+                <div onclick="selectGame('submari')" class="bg-slate-900 border-2 border-slate-800 hover:border-cyan-500 rounded-2xl p-5 cursor-pointer transition transform hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-cyan-500/20 group flex flex-col">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-900/60 border border-cyan-500 text-cyan-400 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-ship"></i>
+                    </div>
+                    <h3 class="font-orbitron font-bold text-lg text-white mb-1">SUBmaríCODE</h3>
+                    <p class="text-slate-400 text-xs flex-1 mb-3 leading-relaxed">Submergeix el submarí fins a fossetes 12x12 i troba el tresor abissal amb sonar.</p>
+                    
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs font-bold text-cyan-400 font-orbitron">
+                            <span>20 Nivells Abissals</span>
+                            <span id="progress-submari-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+                            <div id="progress-submari-bar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-8 text-slate-500 text-xs">
+                Desenvolupat per <a href="https://github.com/bmarquil" target="_blank" class="text-slate-300 hover:underline font-bold">Bernat Marquilles (github.com/bmarquil)</a>
+            </div>
+        </div>
+
+        <!-- AREA DE JOC ACTIVA (PANEL DE L'ESQUERRA I WORKSPACE DE LA DRETA) -->
+        <div id="gamePlayArea" class="flex-1 flex flex-col md:flex-row overflow-hidden">
+            
+            <!-- ESQUERRA: TAULER VISUAL -->
+            <div class="w-full md:w-[450px] lg:w-[480px] bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+                
+                <!-- Targeta de Missió -->
+                <div class="p-3 bg-slate-950/60 border-b border-slate-800 flex items-start space-x-3">
+                    <div id="levelIconContainer" class="w-10 h-10 rounded-xl bg-blue-900 border border-blue-500 flex items-center justify-center shrink-0 shadow">
+                        <i id="levelIcon" class="fa-solid fa-flag text-blue-300 text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-xs">
+                        <div class="flex items-center justify-between">
+                            <h3 id="levelTitle" class="font-bold text-white font-orbitron text-sm">Carregant nivell...</h3>
+                            <span id="blockLimitBadge" class="text-[11px] bg-slate-900 text-amber-400 px-2 py-0.5 rounded-lg border border-slate-700 font-bold">Max Blocs: --</span>
+                        </div>
+                        <p id="levelInstructions" class="text-slate-300 text-xs mt-0.5 leading-relaxed">Selecciona instruccions...</p>
+                    </div>
+                </div>
+
+                <!-- Canvas del Mapa -->
+                <div class="flex-1 flex items-center justify-center p-3 bg-slate-950 relative overflow-hidden">
+                    <div class="relative">
+                        <canvas id="gameCanvas" width="400" height="400" class="rounded-2xl border-4 border-slate-800 bg-slate-900 shadow-2xl"></canvas>
+                        
+                        <!-- Overlay de Guanyar / Perdre -->
+                        <div id="canvasOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center hidden p-6 text-center">
+                            <div id="overlayIcon" class="text-5xl mb-2">🎉</div>
+                            <h2 id="overlayTitle" class="text-2xl font-bold font-orbitron text-white mb-1">Repte Superat!</h2>
+                            <p id="overlayMessage" class="text-xs text-slate-300 mb-4">Has programat la seqüència correcta.</p>
+                            <button id="overlayNextBtn" onclick="nextLevel()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-orbitron font-bold rounded-xl shadow-lg transition transform active:scale-95">
+                                Següent Nivell <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls d'execució -->
+                <div class="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between space-x-2">
+                    <div class="flex items-center space-x-2">
+                        <button id="btnRun" onclick="runProgram()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-orbitron font-bold text-xs tracking-wide rounded-xl shadow-lg flex items-center space-x-2 transition transform active:scale-95">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Executar Codi</span>
+                        </button>
+                        <button id="btnReset" onclick="resetLevelState()" class="px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-800 transition flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-rotate-left"></i>
+                            <span>Reiniciar</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-1 text-xs text-slate-300 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <i class="fa-solid fa-gauge-high text-cyan-400"></i>
+                        <select id="speedSelect" class="bg-transparent text-slate-200 focus:outline-none cursor-pointer font-bold text-xs">
+                            <option value="350">Ràpid</option>
+                            <option value="150">Turbo</option>
+                            <option value="600">Normal</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DRETA: PALETA DE BLOCS I WORKSPACE DE CODIFICACIÓ -->
+            <div id="gameThemeWrapper" class="flex-1 flex flex-col md:flex-row bg-slate-950 overflow-hidden theme-cafa">
+                
+                <!-- CAIXA DE BLOCS -->
+                <div id="blockPaletteZone" class="w-full md:w-64 bg-slate-900/60 border-r border-slate-800 flex flex-col shrink-0" ondragover="allowDrop(event)" ondrop="dropToPaletteToDelete(event)">
+                    <div class="p-2.5 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-300 font-orbitron flex items-center space-x-1">
+                            <i class="fa-solid fa-cubes text-blue-400"></i>
+                            <span>Blocs Disponibles</span>
+                        </span>
+                        <span class="text-[9px] text-slate-500 italic bg-slate-950 px-2 py-0.5 rounded border border-slate-800">Drag to delete</span>
+                    </div>
+                    <div id="blockPalette" class="p-3 flex-1 overflow-y-auto space-y-2">
+                        <!-- Blocs dinàmics -->
+                    </div>
+                </div>
+
+                <!-- WORKSPACE -->
+                <div class="flex-1 flex flex-col bg-slate-950 relative overflow-hidden">
+                    <div class="p-2.5 bg-slate-900/40 border-b border-slate-800 flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-blue-400 font-orbitron flex items-center space-x-1">
+                                <i class="fa-solid fa-code-branch"></i>
+                                <span>Àrea de Treball</span>
+                            </span>
+                            <span id="workspaceCount" class="text-xs bg-slate-900 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-800 font-bold">
+                                0 blocs
+                            </span>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button onclick="showCodeModal()" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-cyan-400 text-xs font-bold rounded-lg border border-slate-800 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-code"></i>
+                                <span>Codi JS</span>
+                            </button>
+                            <button onclick="clearWorkspace()" class="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900/70 text-rose-300 text-xs font-bold rounded-lg border border-rose-800/50 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Netejar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Àrea d'arrossegament de blocs -->
+                    <div id="workspace" class="flex-1 p-6 overflow-auto bg-slate-950 relative" ondragover="allowDrop(event)" ondrop="dropToWorkspace(event)">
+                        
+                        <!-- Bloc d'Inici Fix -->
+                        <div id="startBlock" class="code-block bg-gradient-to-r from-emerald-600 to-teal-600 border-l-4 border-emerald-400 text-white px-4 py-2.5 font-bold text-xs font-orbitron inline-flex items-center space-x-2 mb-2 shadow-lg">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Quan s'executi</span>
+                        </div>
+
+                        <!-- Llista de blocs organitzats -->
+                        <div id="mainBlockSequence" class="ml-4 space-y-2 min-h-[200px] border-l-2 border-dashed border-slate-800 pl-3 py-1">
+                            <!-- Blocs de l'usuari -->
+                        </div>
+
+                        <!-- Paperera -->
+                        <div id="trashZone" class="absolute bottom-4 right-4 w-16 h-16 rounded-2xl border-2 border-dashed border-rose-500/50 bg-rose-950/30 flex flex-col items-center justify-center text-rose-400 transition hover:bg-rose-900/50 hover:text-rose-200 hover:border-rose-400" ondragover="allowDrop(event)" ondrop="dropToPaletteToDelete(event)">
+                            <i class="fa-solid fa-trash-can text-xl"></i>
+                            <span class="text-[9px] font-bold mt-1 font-orbitron">ESBORRAR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER CRÈDITS -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-1.5 px-4 text-center text-xs text-slate-400 flex items-center justify-between shrink-0">
+        <div>
+            <span class="font-bold font-orbitron text-white">Programació en Català</span> &copy; 2026.
+        </div>
+        <div>
+            Creat per <span class="font-bold text-cyan-400">Bernat Marquilles</span> | 
+            <a href="https://github.com/bmarquil" target="_blank" rel="noopener noreferrer" class="text-slate-300 hover:underline">
+                <i class="fa-brands fa-github ml-1"></i> github.com/bmarquil
+            </a>
+        </div>
+    </footer>
+
+<!-- MODALS -->
+<div id="codeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slate-900 border-2 border-slate-700 w-11/12 max-w-lg rounded-2xl p-5 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h3 class="text-base font-bold font-orbitron text-white flex items-center space-x-2">
+                <i class="fa-solid fa-code text-cyan-400"></i>
+                <span>Codi JavaScript Generat</span>
+            </h3>
+            <button onclick="closeCodeModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+        </div>
+        <p class="text-xs text-slate-300 mt-2 mb-3">Aquest és el codi que s'executa a l'algorisme:</p>
+        <pre id="jsCodePreview" class="bg-slate-950 p-4 rounded-xl text-cyan-400 font-mono text-xs overflow-x-auto border border-slate-800 max-h-60"></pre>
+        <div class="mt-4 flex justify-end">
+            <button onclick="closeCodeModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold font-orbitron rounded-xl text-xs">
+                Tancar Finestra
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==========================================================================
+   PORTAL DE JOCS - DADES DE NIVELLS EXCLUSIUS I SOLUBLES GARANTITS
+   ========================================================================== */
+
+// Algorisme BFS per verificar que hi ha un camí lliure des de (sx, sy) fins a (gx, gy)
+function isLevelSolvable(size, start, goal, obstacles, hazards) {
+    const queue = [{ x: start.x, y: start.y }];
+    const visited = new Set();
+    visited.add(`${start.x},${start.y}`);
+
+    const dirs = [
+        { x: 0, y: -1 }, { x: 1, y: 0 },
+        { x: 0, y: 1 },  { x: -1, y: 0 }
+    ];
+
+    while (queue.length > 0) {
+        const curr = queue.shift();
+        if (curr.x === goal.x && curr.y === goal.y) return true;
+
+        for (const d of dirs) {
+            const nx = curr.x + d.x;
+            const ny = curr.y + d.y;
+            const key = `${nx},${ny}`;
+
+            if (nx >= 0 && nx < size && ny >= 0 && ny < size && !visited.has(key)) {
+                const isObs = obstacles.some(o => o.x === nx && o.y === ny);
+                const isHaz = hazards.some(h => h.x === nx && h.y === ny);
+                if (!isObs && !isHaz) {
+                    visited.add(key);
+                    queue.push({ x: nx, y: ny });
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function generateLevelSet(gameType, count) {
+    const levels = [];
+
+    for (let i = 1; i <= count; i++) {
+        let size = 6;
+        let allowed = ['move_forward'];
+        let obs = [];
+        let haz = [];
+        let rx = 0, ry = 0;
+        let gx = 0, gy = 0;
+        let startDir = 1; // 0:Amunt, 1:Dreta, 2:Avall, 3:Esquerra
+
+        // Configuracions bàsiques i mides per temàtica
+        if (gameType === 'cafa') {
+            size = i <= 6 ? 6 : (i <= 13 ? 8 : 10);
+            rx = 0; ry = 0;
+            gx = size - 1; gy = size - 1;
+            startDir = 1;
+        } else if (gameType === 'astro') {
+            size = i <= 5 ? 6 : (i <= 12 ? 8 : 10);
+            rx = 0; ry = size - 1;
+            gx = size - 1; gy = 0;
+            startDir = 0;
+        } else if (gameType === 'tractor') {
+            size = i <= 3 ? 6 : (i <= 7 ? 8 : 10);
+            rx = size - 1; ry = size - 1;
+            gx = 0; gy = 0;
+            startDir = 3;
+        } else if (gameType === 'submari') {
+            size = i <= 4 ? 6 : (i <= 10 ? 8 : (i <= 16 ? 10 : 12));
+            rx = 0; ry = 0;
+            gx = size - 1; gy = size - 1;
+            startDir = 2;
+        }
+
+        // Generem obstacles i perills garantint SEMPRE que el camí sigui transitable
+        const numObstacles = Math.min(Math.floor(size * 1.2) + Math.floor(i / 2), Math.floor(size * size * 0.25));
+        const numHazards = i >= 4 ? Math.min(Math.floor(i / 3), 4) : 0;
+
+        let attempts = 0;
+        let validMapFound = false;
+
+        while (!validMapFound && attempts < 100) {
+            attempts++;
+            obs = [];
+            haz = [];
+
+            // Generador de patrons segons el nivell i joc
+            for (let o = 0; o < numObstacles; o++) {
+                const ox = (o * 3 + i * 2 + attempts) % size;
+                const oy = (o * 5 + i * 3 + attempts * 2) % size;
+                if ((ox !== rx || oy !== ry) && (ox !== gx || oy !== gy)) {
+                    if (!obs.some(p => p.x === ox && p.y === oy)) {
+                        obs.push({ x: ox, y: oy });
+                    }
+                }
+            }
+
+            for (let h = 0; h < numHazards; h++) {
+                const hx = (h * 4 + i * 5 + attempts * 3) % size;
+                const hy = (h * 2 + i * 4 + attempts) % size;
+                if ((hx !== rx || hy !== ry) && (hx !== gx || hy !== gy)) {
+                    if (!obs.some(p => p.x === hx && p.y === hy) && !haz.some(p => p.x === hx && p.y === hy)) {
+                        haz.push({ x: hx, y: hy });
+                    }
+                }
+            }
+
+            // Comprovació amb el cercador de camins
+            if (isLevelSolvable(size, { x: rx, y: ry }, { x: gx, y: gy }, obs, haz)) {
+                validMapFound = true;
+            }
+        }
+
+        // Si per algun cas extrem no es troba camí amb obstacles, buidem una línia directa de seguretat
+        if (!validMapFound) {
+            obs = obs.filter(o => !(o.x === o.y || o.x === o.y + 1));
+            haz = haz.filter(h => !(h.x === h.y || h.x === h.y + 1));
+        }
+
+        // GARANTIA DE BLOCS NECESSARIS
+        // Si no és una línia recta directa, necessitarem girar!
+        const isStraightLine = (rx === gx || ry === gy);
+        
+        if (i >= 2 || !isStraightLine) {
+            allowed.push('turn_dir');
+        }
+        if (i >= 4) allowed.push('move_backward');
+        if (i >= 5) allowed.push('repeat_times');
+        if (i >= 8) allowed.push('while_not_goal');
+        if (i >= 11) allowed.push('if_path');
+
+        // Minimitzar duplicats a allowedBlocks
+        allowed = Array.from(new Set(allowed));
+
+        // Calcular límit de blocs de manera realista
+        const minDistance = Math.abs(gx - rx) + Math.abs(gy - ry);
+        const maxB = Math.max(minDistance + 4, 8 + Math.floor(i / 2));
+
+        let desc = "";
+        if (i <= 3) desc = "Aconsegueix la meta utilitzant els blocs d'avançar i girar.";
+        else if (i <= 6) desc = "Atenció amb els obstacles i perills! Utilitza retrocedir si cal.";
+        else if (i <= 9) desc = "Bucle de repetició: estalvia blocs fent servir 'Repetir X vegades'.";
+        else desc = "Utilitza condicionals i bucles avançats per superar el laberint.";
+
+        levels.push({
+            id: i,
+            title: `${i}. Repte ${gameType.toUpperCase()} #${i}`,
+            instructions: desc,
+            gridSize: size,
+            robot: { x: rx, y: ry, dir: startDir },
+            goal: { x: gx, y: gy },
+            obstacles: obs,
+            hazards: haz,
+            allowedBlocks: allowed,
+            maxBlocks: maxB
+        });
+    }
+    return levels;
+}
+
+const GAMES_DATA = {
+    'cafa': {
+        name: 'CAFArobot',
+        icon: 'fa-robot',
+        iconColor: 'text-amber-400',
+        themeClass: 'theme-cafa',
+        levels: generateLevelSet('cafa', 20)
+    },
+    'astro': {
+        name: 'ASTRO-bot',
+        icon: 'fa-user-astronaut',
+        iconColor: 'text-purple-400',
+        themeClass: 'theme-astro',
+        levels: generateLevelSet('astro', 20)
+    },
+    'tractor': {
+        name: 'TRACTORcode',
+        icon: 'fa-tractor',
+        iconColor: 'text-emerald-400',
+        themeClass: 'theme-tractor',
+        levels: generateLevelSet('tractor', 10)
+    },
+    'submari': {
+        name: 'SUBmaríCODE',
+        icon: 'fa-ship',
+        iconColor: 'text-cyan-400',
+        themeClass: 'theme-submari',
+        levels: generateLevelSet('submari', 20)
+    }
+};
+
+/* ==========================================================================
+   ESTAT GLOBAL DE L'APLICACIÓ I SEGUIMENT DE PROGRESSIÓ
+   ========================================================================== */
+let currentGameKey = 'cafa';
+let currentLevelIndex = 0;
+let robotState = { x: 0, y: 0, dir: 1 };
+let isRunning = false;
+let soundEnabled = true;
+let executionSpeed = 350;
+let executionTimer = null;
+let draggedBlockData = null;
+
+// Registre de nivells completats per a cada joc
+const gameProgress = {
+    'cafa': new Set(),
+    'astro': new Set(),
+    'tractor': new Set(),
+    'submari': new Set()
+};
+
+// Variable d'àudio global
+let audioCtx = null;
+
+function initAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+function updateMenuProgressUI() {
+    Object.keys(GAMES_DATA).forEach(key => {
+        const total = GAMES_DATA[key].levels.length;
+        const completed = gameProgress[key].size;
+        const percent = Math.round((completed / total) * 100);
+
+        const textEl = document.getElementById(`progress-${key}-text`);
+        const barEl = document.getElementById(`progress-${key}-bar`);
+
+        if (textEl && barEl) {
+            textEl.textContent = `${percent}%`;
+            barEl.style.width = `${percent}%`;
+        }
+    });
+}
+
+function playSound(type) {
+    if (!soundEnabled) return;
+    initAudioContext();
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'step') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+        } else if (type === 'turn') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.linearRampToValueAtTime(450, now + 0.1);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'win') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.12);
+            osc.frequency.setValueAtTime(783.99, now + 0.24);
+            osc.frequency.setValueAtTime(1046.50, now + 0.36);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        } else if (type === 'fail') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.linearRampToValueAtTime(40, now + 0.35);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+    } catch(e) {}
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('btnSound');
+    if (soundEnabled) {
+        btn.innerHTML = '<i class="fa-solid fa-volume-high text-lg"></i>';
+        btn.classList.replace('text-slate-500', 'text-cyan-400');
+    } else {
+        btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-lg"></i>';
+        btn.classList.replace('text-cyan-400', 'text-slate-500');
+    }
+}
+
+function showGameMenu() {
+    updateMenuProgressUI();
+    document.getElementById('gameMenuModal').classList.remove('hidden');
+}
+
+function selectGame(gameKey) {
+    initAudioContext();
+    currentGameKey = gameKey;
+    const game = GAMES_DATA[gameKey];
+
+    // Actualitzar interfície del capçal
+    document.getElementById('portalTitle').textContent = game.name;
+    document.getElementById('currentGameIcon').className = `fa-solid ${game.icon} text-xl ${game.iconColor}`;
+    document.getElementById('gameThemeWrapper').className = `flex-1 flex flex-col md:flex-row bg-slate-950 overflow-hidden ${game.themeClass}`;
+
+    document.getElementById('gameMenuModal').classList.add('hidden');
+    loadLevel(0);
+}
+
+/* ==========================================================================
+   CARREGA I DIBUIX DE NIVELLS AL CANVAS
+   ========================================================================== */
+function loadLevel(index) {
+    currentLevelIndex = index;
+    const game = GAMES_DATA[currentGameKey];
+    const lvl = game.levels[currentLevelIndex] || game.levels[0];
+
+    robotState = { ...lvl.robot };
+
+    document.getElementById('levelTitle').textContent = lvl.title;
+    document.getElementById('levelInstructions').textContent = lvl.instructions;
+    document.getElementById('blockLimitBadge').textContent = `Max Blocs: ${lvl.maxBlocks}`;
+
+    renderLevelSelector();
+    renderBlockPalette(lvl.allowedBlocks);
+    clearWorkspace();
+    document.getElementById('canvasOverlay').classList.add('hidden');
+
+    drawGame();
+}
+
+function renderLevelSelector() {
+    const container = document.getElementById('levelButtons');
+    container.innerHTML = '';
+    const game = GAMES_DATA[currentGameKey];
+    const completedSet = gameProgress[currentGameKey];
+
+    game.levels.forEach((lvl, idx) => {
+        const isCompleted = completedSet.has(idx);
+        const btn = document.createElement('button');
+        
+        let bgClass = 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-700';
+        if (idx === currentLevelIndex) {
+            bgClass = 'bg-amber-400 text-slate-950 shadow-lg scale-110 border-2 border-amber-200';
+        } else if (isCompleted) {
+            bgClass = 'bg-emerald-900/80 text-emerald-300 border border-emerald-600';
+        }
+
+        btn.className = `w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-xs font-bold font-orbitron transition flex items-center justify-center shrink-0 ${bgClass}`;
+        btn.textContent = lvl.id;
+        btn.onclick = () => {
+            if (isRunning) resetLevelState();
+            loadLevel(idx);
+        };
+        container.appendChild(btn);
+    });
+}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawGame() {
+    const game = GAMES_DATA[currentGameKey];
+    const lvl = game.levels[currentLevelIndex] || game.levels[0];
+    const size = lvl.gridSize;
+    const cellSize = canvas.width / size;
+
+    // Fons segons el joc
+    if (currentGameKey === 'cafa') ctx.fillStyle = '#1e293b';
+    else if (currentGameKey === 'astro') ctx.fillStyle = '#0f172a';
+    else if (currentGameKey === 'tractor') ctx.fillStyle = '#14532d';
+    else if (currentGameKey === 'submari') ctx.fillStyle = '#0284c7';
+
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Reixeta
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            const x = c * cellSize;
+            const y = r * cellSize;
+
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(x, y, cellSize, cellSize);
+        }
+    }
+
+    // Dibuixar obstacles (Pedres/Coralls/Cràters)
+    lvl.obstacles.forEach(obs => {
+        const x = obs.x * cellSize;
+        const y = obs.y * cellSize;
+
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, cellSize - 4, cellSize - 4, 8);
+        ctx.fill();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = `900 ${cellSize * 0.45}px "Font Awesome 6 Free"`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('\uf1b2', x + cellSize / 2, y + cellSize / 2);
+    });
+
+    // Dibuixar perills (Foc/Plasma/Mines/Fang)
+    lvl.hazards.forEach(h => {
+        const x = h.x * cellSize;
+        const y = h.y * cellSize;
+
+        ctx.fillStyle = '#450a0a';
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, cellSize - 4, cellSize - 4, 8);
+        ctx.fill();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.font = `900 ${cellSize * 0.5}px "Font Awesome 6 Free"`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('\uf06d', x + cellSize / 2, y + cellSize / 2);
+    });
+
+    // Dibuixar Objectiu / Meta
+    const gx = lvl.goal.x * cellSize;
+    const gy = lvl.goal.y * cellSize;
+
+    ctx.fillStyle = '#22c55e44';
+    ctx.beginPath();
+    ctx.arc(gx + cellSize/2, gy + cellSize/2, cellSize*0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    let goalIcon = '\uf024'; // Flag
+    if (currentGameKey === 'astro') goalIcon = '\uf3a5'; // Gem
+    else if (currentGameKey === 'tractor') goalIcon = '\uf7bf'; // Wheat
+    else if (currentGameKey === 'submari') goalIcon = '\uf3a5'; // Gem
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = `900 ${cellSize * 0.5}px "Font Awesome 6 Free"`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(goalIcon, gx + cellSize / 2, gy + cellSize / 2);
+
+    // Dibuixar Vehicle / Avatar Principal
+    const rx = robotState.x * cellSize + cellSize / 2;
+    const ry = robotState.y * cellSize + cellSize / 2;
+
+    ctx.save();
+    ctx.translate(rx, ry);
+    ctx.rotate(robotState.dir * Math.PI / 2);
+
+    let vehicleColor = '#3b82f6';
+    let vehicleIcon = '\uf544'; // Robot
+
+    if (currentGameKey === 'astro') { vehicleColor = '#a855f7'; vehicleIcon = '\uf48e'; }
+    else if (currentGameKey === 'tractor') { vehicleColor = '#22c55e'; vehicleIcon = '\uf722'; }
+    else if (currentGameKey === 'submari') { vehicleColor = '#06b6d4'; vehicleIcon = '\uf21a'; }
+
+    ctx.fillStyle = vehicleColor;
+    ctx.beginPath();
+    ctx.roundRect(-cellSize*0.35, -cellSize*0.35, cellSize*0.7, cellSize*0.7, 10);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `900 ${cellSize * 0.45}px "Font Awesome 6 Free"`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(vehicleIcon, 0, 0);
+
+    ctx.restore();
+}
+
+/* ==========================================================================
+   PALETA DE BLOCS I DRAG & DROP
+   ========================================================================== */
+const BLOCK_DEFINITIONS = {
+    'move_forward': { type: 'action', title: 'Avançar 1 pas', icon: 'fa-arrow-up', class: 'block-action' },
+    'move_backward': { type: 'action', title: 'Retrocedir 1 pas', icon: 'fa-arrow-down', class: 'block-action' },
+    'turn_dir': { type: 'turn', title: 'Girar', icon: 'fa-rotate', isTurn: true, class: 'block-turn' },
+    'repeat_times': { type: 'loop', title: 'Repetir', icon: 'fa-repeat', isContainer: true, class: 'block-loop' },
+    'while_not_goal': { type: 'loop', title: 'Mentre no arribis a la meta', icon: 'fa-flag-checkered', isContainer: true, class: 'block-loop' },
+    'if_path': { type: 'if', title: 'Si hi ha camí a', icon: 'fa-eye', isContainer: true, class: 'block-if' }
+};
+
+function renderBlockPalette(allowedKeys) {
+    const palette = document.getElementById('blockPalette');
+    palette.innerHTML = '';
+
+    allowedKeys.forEach(key => {
+        const def = BLOCK_DEFINITIONS[key];
+        if (!def) return;
+        const el = createBlockDOM(key, def, true);
+        palette.appendChild(el);
+    });
+}
+
+function createBlockDOM(key, def, isPalette = false) {
+    const div = document.createElement('div');
+    div.className = `code-block ${def.class} p-2.5 my-1 text-xs font-bold rounded-xl flex flex-col justify-center select-none shadow-md`;
+    div.setAttribute('draggable', 'true');
+    div.dataset.blockKey = key;
+
+    let innerHTML = `<div class="flex items-center space-x-2">
+        <i class="fa-solid ${def.icon}"></i>
+        <span>${def.title}</span>`;
+
+    if (key === 'turn_dir') {
+        innerHTML += `
+            <select class="turn-direction bg-slate-950 text-white rounded-lg px-2 py-0.5 ml-1 text-xs border border-slate-700 focus:outline-none cursor-pointer" onclick="event.stopPropagation()">
+                <option value="right">Dreta ↻</option>
+                <option value="left">Esquerra ↺</option>
+            </select>`;
+    } else if (key === 'repeat_times') {
+        innerHTML += `
+            <select class="loop-count bg-slate-950 text-amber-400 font-bold rounded-lg px-2 py-0.5 ml-1 text-xs border border-amber-500 focus:outline-none cursor-pointer" onclick="event.stopPropagation()">
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+            </select>
+            <span class="ml-1">vegades</span>`;
+    } else if (key === 'if_path') {
+        innerHTML += `
+            <select class="if-dir bg-slate-950 text-emerald-300 rounded-lg px-1.5 py-0.5 ml-1 text-xs border border-emerald-600 focus:outline-none cursor-pointer" onclick="event.stopPropagation()">
+                <option value="front">davant</option>
+                <option value="right">dreta</option>
+                <option value="left">esquerra</option>
+            </select>`;
+    }
+
+    innerHTML += `</div>`;
+
+    if (def.isContainer) {
+        innerHTML += `
+            <div class="nested-sequence mt-2 ml-3 p-2 bg-black/40 border-l-3 border-amber-400 rounded-r-lg min-h-[40px] space-y-1" ondragover="allowDrop(event)" ondrop="dropToNested(event)">
+                <span class="text-[10px] text-slate-500 italic pointer-events-none empty-hint">Arrossega blocs aquí</span>
+            </div>`;
+    }
+
+    div.innerHTML = innerHTML;
+
+    div.ondragstart = (e) => {
+        e.stopPropagation();
+        draggedBlockData = {
+            key: key,
+            isFromPalette: isPalette,
+            element: isPalette ? null : div
+        };
+        e.dataTransfer.setData('text/plain', key);
+    };
+
+    return div;
+}
+
+function allowDrop(e) { e.preventDefault(); e.stopPropagation(); }
+
+function dropToWorkspace(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!draggedBlockData) return;
+
+    let targetSeq = document.getElementById('mainBlockSequence');
+    if (draggedBlockData.isFromPalette) {
+        const def = BLOCK_DEFINITIONS[draggedBlockData.key];
+        const newBlock = createBlockDOM(draggedBlockData.key, def, false);
+        targetSeq.appendChild(newBlock);
+    } else if (draggedBlockData.element) {
+        targetSeq.appendChild(draggedBlockData.element);
+    }
+
+    draggedBlockData = null;
+    updateWorkspaceCount();
+}
+
+function dropToNested(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!draggedBlockData) return;
+
+    const dropContainer = e.currentTarget;
+    const hint = dropContainer.querySelector('.empty-hint');
+    if (hint) hint.remove();
+
+    if (draggedBlockData.isFromPalette) {
+        const def = BLOCK_DEFINITIONS[draggedBlockData.key];
+        const newBlock = createBlockDOM(draggedBlockData.key, def, false);
+        dropContainer.appendChild(newBlock);
+    } else if (draggedBlockData.element) {
+        dropContainer.appendChild(draggedBlockData.element);
+    }
+
+    draggedBlockData = null;
+    updateWorkspaceCount();
+}
+
+function dropToPaletteToDelete(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (draggedBlockData && !draggedBlockData.isFromPalette && draggedBlockData.element) {
+        draggedBlockData.element.remove();
+        playSound('step');
+        updateWorkspaceCount();
+    }
+    draggedBlockData = null;
+}
+
+function clearWorkspace() {
+    document.getElementById('mainBlockSequence').innerHTML = '';
+    updateWorkspaceCount();
+}
+
+function updateWorkspaceCount() {
+    const blocks = document.querySelectorAll('#mainBlockSequence .code-block');
+    document.getElementById('workspaceCount').textContent = `${blocks.length} blocs`;
+}
+
+/* ==========================================================================
+   EXECUCIÓ DE L'ALGORISME
+   ========================================================================== */
+function parseWorkspaceToAST(container) {
+    const ast = [];
+    const children = Array.from(container.children).filter(child => child.classList.contains('code-block'));
+
+    children.forEach(block => {
+        const key = block.dataset.blockKey;
+        const node = { type: key, element: block };
+
+        if (key === 'turn_dir') {
+            const select = block.querySelector('.turn-direction');
+            node.dir = select ? select.value : 'right';
+        } else if (key === 'repeat_times') {
+            const select = block.querySelector('.loop-count');
+            node.times = parseInt(select.value, 10) || 3;
+            const nested = block.querySelector('.nested-sequence');
+            node.body = parseWorkspaceToAST(nested);
+        } else if (key === 'while_not_goal') {
+            const nested = block.querySelector('.nested-sequence');
+            node.body = parseWorkspaceToAST(nested);
+        } else if (key === 'if_path') {
+            const select = block.querySelector('.if-dir');
+            node.dir = select ? select.value : 'front';
+            const nested = block.querySelector('.nested-sequence');
+            node.body = parseWorkspaceToAST(nested);
+        }
+
+        ast.push(node);
+    });
+
+    return ast;
+}
+
+function runProgram() {
+    if (isRunning) return;
+
+    resetLevelState(false);
+    isRunning = true;
+
+    document.getElementById('btnRun').disabled = true;
+    document.getElementById('btnRun').classList.add('opacity-50');
+
+    const ast = parseWorkspaceToAST(document.getElementById('mainBlockSequence'));
+    if (ast.length === 0) {
+        showOverlay(false, "Arrossega blocs a l'Àrea de Treball abans d'executar!");
+        isRunning = false;
+        document.getElementById('btnRun').disabled = false;
+        document.getElementById('btnRun').classList.remove('opacity-50');
+        return;
+    }
+
+    executionSpeed = parseInt(document.getElementById('speedSelect').value, 10);
+    const executor = createExecutor(ast);
+
+    function step() {
+        if (!isRunning) return;
+        const res = executor.next();
+
+        if (res.done) {
+            isRunning = false;
+            document.getElementById('btnRun').disabled = false;
+            document.getElementById('btnRun').classList.remove('opacity-50');
+
+            const game = GAMES_DATA[currentGameKey];
+            const lvl = game.levels[currentLevelIndex] || game.levels[0];
+
+            if (robotState.x === lvl.goal.x && robotState.y === lvl.goal.y) {
+                playSound('win');
+                // Marcar el nivell com a completat i actualitzar progrés
+                gameProgress[currentGameKey].add(currentLevelIndex);
+                renderLevelSelector();
+                updateMenuProgressUI();
+                showOverlay(true, "🎉 Excel·lent! Has aconseguit l'objectiu!");
+            } else {
+                playSound('fail');
+                showOverlay(false, "El vehicle no ha arribat a la meta.");
+            }
+        } else {
+            executionTimer = setTimeout(step, executionSpeed);
+        }
+    }
+
+    step();
+}
+
+function resetLevelState() {
+    if (executionTimer) clearTimeout(executionTimer);
+    isRunning = false;
+    document.getElementById('btnRun').disabled = false;
+    document.getElementById('btnRun').classList.remove('opacity-50');
+
+    document.querySelectorAll('.executing-block').forEach(el => el.classList.remove('executing-block'));
+
+    const game = GAMES_DATA[currentGameKey];
+    const lvl = game.levels[currentLevelIndex] || game.levels[0];
+    robotState = { ...lvl.robot };
+    document.getElementById('canvasOverlay').classList.add('hidden');
+    drawGame();
+}
+
+function* createExecutor(nodes) {
+    const game = GAMES_DATA[currentGameKey];
+    const lvl = game.levels[currentLevelIndex] || game.levels[0];
+
+    for (const node of nodes) {
+        highlightBlock(node.element);
+        yield true;
+
+        if (node.type === 'move_forward') {
+            const nextPos = getNextPosition(robotState.x, robotState.y, robotState.dir, 1);
+            if (canMoveTo(nextPos.x, nextPos.y)) {
+                robotState.x = nextPos.x;
+                robotState.y = nextPos.y;
+                playSound('step');
+                drawGame();
+            } else {
+                playSound('fail');
+                showOverlay(false, "💥 Impacte contra un obstacle!");
+                return;
+            }
+        } else if (node.type === 'move_backward') {
+            const nextPos = getNextPosition(robotState.x, robotState.y, robotState.dir, -1);
+            if (canMoveTo(nextPos.x, nextPos.y)) {
+                robotState.x = nextPos.x;
+                robotState.y = nextPos.y;
+                playSound('step');
+                drawGame();
+            } else {
+                playSound('fail');
+                showOverlay(false, "💥 Impacte posterior!");
+                return;
+            }
+        } else if (node.type === 'turn_dir') {
+            if (node.dir === 'right') robotState.dir = (robotState.dir + 1) % 4;
+            else robotState.dir = (robotState.dir + 3) % 4;
+            playSound('turn');
+            drawGame();
+        } else if (node.type === 'repeat_times') {
+            for (let i = 0; i < node.times; i++) {
+                yield* createExecutor(node.body);
+            }
+        } else if (node.type === 'while_not_goal') {
+            let maxSafetyLimit = 100;
+            while ((robotState.x !== lvl.goal.x || robotState.y !== lvl.goal.y) && maxSafetyLimit > 0) {
+                yield* createExecutor(node.body);
+                maxSafetyLimit--;
+            }
+        } else if (node.type === 'if_path') {
+            if (checkPathInDir(node.dir)) {
+                yield* createExecutor(node.body);
+            }
+        }
+
+        unhighlightBlock(node.element);
+    }
+}
+
+function highlightBlock(el) {
+    document.querySelectorAll('.executing-block').forEach(b => b.classList.remove('executing-block'));
+    if (el) el.classList.add('executing-block');
+}
+
+function unhighlightBlock(el) {
+    if (el) el.classList.remove('executing-block');
+}
+
+function getNextPosition(x, y, dir, steps = 1) {
+    let nx = x; let ny = y;
+    if (dir === 0) ny -= steps;
+    else if (dir === 1) nx += steps;
+    else if (dir === 2) ny += steps;
+    else if (dir === 3) nx -= steps;
+    return { x: nx, y: ny };
+}
+
+function canMoveTo(x, y) {
+    const game = GAMES_DATA[currentGameKey];
+    const lvl = game.levels[currentLevelIndex] || game.levels[0];
+
+    if (x < 0 || x >= lvl.gridSize || y < 0 || y >= lvl.gridSize) return false;
+    if (lvl.obstacles.some(o => o.x === x && o.y === y)) return false;
+    if (lvl.hazards.some(h => h.x === x && h.y === y)) return false;
+
+    return true;
+}
+
+function checkPathInDir(relativeDir) {
+    let checkDir = robotState.dir;
+    if (relativeDir === 'right') checkDir = (robotState.dir + 1) % 4;
+    else if (relativeDir === 'left') checkDir = (robotState.dir + 3) % 4;
+
+    const target = getNextPosition(robotState.x, robotState.y, checkDir, 1);
+    return canMoveTo(target.x, target.y);
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+function showOverlay(success, message) {
+    const overlay = document.getElementById('canvasOverlay');
+    const icon = document.getElementById('overlayIcon');
+    const title = document.getElementById('overlayTitle');
+    const msg = document.getElementById('overlayMessage');
+    const nextBtn = document.getElementById('overlayNextBtn');
+
+    overlay.classList.remove('hidden');
+
+    if (success) {
+        icon.textContent = "🏆";
+        title.textContent = "Nivell Superat!";
+        title.className = "text-2xl font-bold font-orbitron text-emerald-400 mb-1";
+        msg.textContent = message;
+        nextBtn.classList.remove('hidden');
+    } else {
+        icon.textContent = "💥";
+        title.textContent = "Intenta-ho de nou";
+        title.className = "text-2xl font-bold font-orbitron text-rose-500 mb-1";
+        msg.textContent = message;
+        nextBtn.classList.add('hidden');
+    }
+}
+
+function nextLevel() {
+    const game = GAMES_DATA[currentGameKey];
+    if (currentLevelIndex < game.levels.length - 1) {
+        loadLevel(currentLevelIndex + 1);
+    } else {
+        showOverlay(true, "👑 FELICITATS! Has completat tots els nivells d'aquest joc!");
+        document.getElementById('overlayNextBtn').classList.add('hidden');
+    }
+}
+
+function showCodeModal() {
+    const ast = parseWorkspaceToAST(document.getElementById('mainBlockSequence'));
+    const codeStr = generateJSCodeFromAST(ast, 0);
+    document.getElementById('jsCodePreview').textContent = codeStr || "// Sense instruccions a l'àrea de treball";
+    document.getElementById('codeModal').classList.remove('hidden');
+}
+
+function closeCodeModal() {
+    document.getElementById('codeModal').classList.add('hidden');
+}
+
+function generateJSCodeFromAST(ast, indentLevel = 0) {
+    const indent = '  '.repeat(indentLevel);
+    let code = '';
+
+    ast.forEach(node => {
+        if (node.type === 'move_forward') code += `${indent}vehicle.avancar();\n`;
+        else if (node.type === 'move_backward') code += `${indent}vehicle.retrocedir();\n`;
+        else if (node.type === 'turn_dir') code += `${indent}vehicle.girar('${node.dir}');\n`;
+        else if (node.type === 'repeat_times') {
+            code += `${indent}for (let i = 0; i < ${node.times}; i++) {\n`;
+            code += generateJSCodeFromAST(node.body, indentLevel + 1);
+            code += `${indent}}\n`;
+        } else if (node.type === 'while_not_goal') {
+            code += `${indent}while (!vehicle.haArribatMeta()) {\n`;
+            code += generateJSCodeFromAST(node.body, indentLevel + 1);
+            code += `${indent}}\n`;
+        } else if (node.type === 'if_path') {
+            code += `${indent}if (vehicle.hiHaCami('${node.dir}')) {\n`;
+            code += generateJSCodeFromAST(node.body, indentLevel + 1);
+            code += `${indent}}\n`;
+        }
+    });
+
+    return code;
+}
+
+window.onload = () => {
+    // Inicialitza l'àudio amb el primer clic de l'usuari en qualsevol lloc
+    document.addEventListener('click', initAudioContext, { once: true });
+    document.addEventListener('touchstart', initAudioContext, { once: true });
+
+    // Obrir directament al menú principal de jocs
+    showGameMenu();
+};
+</script>
